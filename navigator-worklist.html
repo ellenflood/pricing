@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Access Board — Navigator Worklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EBEEF2;
+  --surface:#FFFFFF;
+  --ink:#16202B;
+  --muted:#6B7A8A;
+  --hair:#D3DAE2;
+  --steel:#2D4A63;
+  --amber:#9A6208;
+  --amber-bg:#FDF3E0;
+  --red:#A62F2B;
+  --red-bg:#FBECEB;
+  --green:#1B6B51;
+  --green-bg:#E7F3EE;
+  --violet:#4B3B7A;
+  --violet-bg:#EFECF8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 64px;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* ---------- demo banner ---------- */
+.demo-note{
+  background:var(--steel);color:#DCE5EE;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 0;text-align:center;
+}
+
+/* ---------- topbar ---------- */
+.topbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--hair);
+  padding:14px 0;
+}
+.topbar-inner{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.mark{
+  font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;
+  letter-spacing:-.02em;
+}
+.mark span{color:var(--muted);font-weight:500}
+.topbar-meta{
+  margin-left:auto;display:flex;gap:20px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+}
+
+/* ---------- fund monitor (signature) ---------- */
+.monitor{
+  background:#1B2733;
+  padding:18px 0 20px;
+}
+.monitor-head{
+  display:flex;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap;
+}
+.monitor-title{
+  font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;
+  letter-spacing:.1em;text-transform:uppercase;color:#F2F5F8;
+}
+.monitor-sub{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:#8496A8;
+}
+.monitor-sub b{color:#E4B463;font-weight:500}
+.funds{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:1px;
+  background:#33414F;border:1px solid #33414F;
+}
+.fund{
+  background:#212E3B;padding:11px 13px;display:flex;flex-direction:column;gap:7px;
+}
+.fund-name{
+  font-size:12.5px;font-weight:500;color:#E8EDF2;line-height:1.3;
+}
+.fund-dx{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:#7D8FA1;
+  text-transform:uppercase;letter-spacing:.05em;
+}
+.fund-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}
+.status{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  letter-spacing:.08em;padding:3px 7px;border-radius:2px;
+}
+.st-open{background:#1B6B51;color:#DFF3EA}
+.st-wait{background:#8A5708;color:#FBEEDA}
+.st-closed{background:#2B3945;color:#7D8FA1;border:1px solid #3A4956}
+.fund-when{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:#6E8093}
+.bell{
+  background:none;border:1px solid #3D4C5A;color:#8496A8;
+  font-size:10.5px;font-family:"IBM Plex Mono",monospace;
+  padding:3px 7px;border-radius:2px;cursor:pointer;
+}
+.bell:hover{border-color:#5C6E80;color:#C6D2DD}
+.bell.on{border-color:#E4B463;color:#E4B463}
+
+/* ---------- worklist ---------- */
+.list-head{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;padding:28px 0 14px;
+}
+.count{
+  font-family:"Archivo",sans-serif;font-weight:700;font-size:26px;
+  letter-spacing:-.025em;
+}
+.count em{font-style:normal;color:var(--muted);font-weight:500}
+.tabs{display:flex;gap:2px}
+.tab{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.04em;
+  background:transparent;border:1px solid var(--hair);color:var(--muted);
+  padding:6px 11px;cursor:pointer;
+}
+.tab:hover{color:var(--ink);border-color:#B6C1CD}
+.tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.thead{
+  display:grid;grid-template-columns:1.5fr 1.4fr 1.5fr 1fr .9fr 116px;
+  gap:14px;padding:0 16px 7px;
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+}
+.rows{display:flex;flex-direction:column;gap:5px}
+.row{background:var(--surface);border:1px solid var(--hair);border-left-width:3px}
+.row[data-flag="hot"]{border-left-color:var(--red)}
+.row[data-flag="warm"]{border-left-color:var(--amber)}
+.row[data-flag="ok"]{border-left-color:var(--green)}
+.row.hidden{display:none}
+
+.row-main{
+  display:grid;grid-template-columns:1.5fr 1.4fr 1.5fr 1fr .9fr 116px;
+  gap:14px;align-items:center;padding:13px 16px;
+  width:100%;background:none;border:none;text-align:left;cursor:pointer;
+  font:inherit;color:inherit;
+}
+.row-main:hover{background:#F7F9FB}
+.row-main:focus-visible{outline:2px solid var(--steel);outline-offset:-2px}
+
+.pt-name{font-weight:600;font-size:14px}
+.pt-sub{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:2px;
+}
+.drug{font-weight:500}
+.drug-sub{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:2px}
+.blocker{font-size:13px;line-height:1.35}
+.blocker b{font-weight:600}
+.cost{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600}
+.cost-sub{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:2px}
+.clock{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500}
+.clock.hot{color:var(--red)}
+.clock.warm{color:var(--amber)}
+.clock-sub{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:2px}
+.go{
+  display:inline-block;background:var(--ink);color:#fff;
+  font-size:12px;font-weight:500;padding:7px 12px;border:none;border-radius:2px;
+  width:100%;text-align:center;cursor:pointer;font-family:inherit;
+}
+.go:hover{background:#243444}
+.go.ghost{background:none;color:var(--steel);border:1px solid var(--hair)}
+.go.ghost:hover{background:#F0F4F8}
+
+.pill{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  font-weight:600;letter-spacing:.05em;padding:2px 6px;border-radius:2px;
+}
+.p-copay{background:var(--green-bg);color:var(--green)}
+.p-pap{background:var(--violet-bg);color:var(--violet)}
+.p-ins{background:#E9EEF3;color:var(--steel)}
+.p-fund{background:var(--amber-bg);color:var(--amber)}
+
+/* ---------- expanded detail ---------- */
+.detail{display:none;border-top:1px dashed var(--hair);padding:18px 16px 16px;background:#FAFCFD}
+.row.open .detail{display:block}
+.detail-head{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:11px;
+}
+.paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.path{background:var(--surface);border:1px solid var(--hair);padding:13px}
+.path.best{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.path-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px}
+.path-name{font-weight:600;font-size:13.5px}
+.path-cost{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600}
+.path-meta{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);
+  padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid #EDF1F5;
+}
+.path ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.path li{font-size:12.5px;line-height:1.35;padding-left:15px;position:relative;color:#334353}
+.path li::before{position:absolute;left:0;font-family:"IBM Plex Mono",monospace;font-size:11px}
+.path li.y::before{content:"+";color:var(--green)}
+.path li.n::before{content:"–";color:var(--red)}
+.path li.i::before{content:"·";color:var(--muted)}
+.why{
+  margin-top:14px;background:var(--surface);border:1px solid var(--hair);
+  padding:13px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;
+}
+.why-body{flex:1;min-width:260px}
+.why-label{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:5px;
+}
+.why-text{font-size:13px;line-height:1.5}
+.why-text b{font-weight:600}
+.why-actions{display:flex;gap:7px;flex-wrap:wrap}
+.btn-sm{
+  font-family:inherit;font-size:12px;padding:7px 11px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--hair);background:var(--surface);color:var(--ink);
+}
+.btn-sm:hover{background:#F0F4F8}
+.btn-sm.solid{background:var(--steel);border-color:var(--steel);color:#fff}
+.btn-sm.solid:hover{background:#22394C}
+
+.foot{
+  margin-top:26px;padding-top:16px;border-top:1px solid var(--hair);
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+@media (max-width:860px){
+  .thead{display:none}
+  .row-main{grid-template-columns:1fr 1fr;gap:10px}
+  .row-main>div:last-child{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="demo-note">Sample data · fictional patients and medications · fund statuses shown are illustrative</div>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="mark">Access Board <span>/ Northside Rheumatology</span></div>
+    <div class="topbar-meta">
+      <span>Mon 17 Aug · 8:42a</span>
+      <span>M. Reyes, Financial Navigator</span>
+    </div>
+  </div>
+</header>
+
+<section class="monitor">
+  <div class="wrap">
+    <div class="monitor-head">
+      <div class="monitor-title">Foundation fund monitor</div>
+      <div class="monitor-sub">Checked 6 min ago · <b>2 changes since Friday</b></div>
+    </div>
+    <div class="funds">
+      <div class="fund">
+        <div>
+          <div class="fund-name">PAN Foundation</div>
+          <div class="fund-dx">Rheumatoid arthritis</div>
+        </div>
+        <div class="fund-row">
+          <span class="status st-open">OPEN</span>
+          <span class="fund-when">opened 2h ago</span>
+        </div>
+      </div>
+      <div class="fund">
+        <div>
+          <div class="fund-name">HealthWell Foundation</div>
+          <div class="fund-dx">Psoriatic arthritis</div>
+        </div>
+        <div class="fund-row">
+          <span class="status st-closed">CLOSED</span>
+          <button class="bell" data-bell>notify me</button>
+        </div>
+      </div>
+      <div class="fund">
+        <div>
+          <div class="fund-name">The Assistance Fund</div>
+          <div class="fund-dx">Ankylosing spondylitis</div>
+        </div>
+        <div class="fund-row">
+          <span class="status st-wait">WAITLIST</span>
+          <span class="fund-when">since 11 Aug</span>
+        </div>
+      </div>
+      <div class="fund">
+        <div>
+          <div class="fund-name">Good Days</div>
+          <div class="fund-dx">Lupus</div>
+        </div>
+        <div class="fund-row">
+          <span class="status st-closed">CLOSED</span>
+          <button class="bell on" data-bell>notify on</button>
+        </div>
+      </div>
+      <div class="fund">
+        <div>
+          <div class="fund-name">Patient Advocate Fdn.</div>
+          <div class="fund-dx">Crohn's disease</div>
+        </div>
+        <div class="fund-row">
+          <span class="status st-open">OPEN</span>
+          <span class="fund-when">since 4 Aug</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="list-head">
+    <div class="count">7 patients <em>need action today</em></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-filter="all">All</button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="hot">Expiring</button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="warm">Awaiting PA</button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="ok">Ready to enroll</button>
+    </div>
+  </div>
+
+  <div class="thead">
+    <div>Patient</div><div>Medication</div><div>Where it's stuck</div>
+    <div>Best path</div><div>Clock</div><div></div>
+  </div>
+
+  <div class="rows" id="rows">
+
+    <!-- ROW 1 — expanded by default -->
+    <article class="row open" data-flag="hot">
+      <button class="row-main" aria-expanded="true">
+        <div>
+          <div class="pt-name">D. Okafor</div>
+          <div class="pt-sub">MRN 4471 · RA</div>
+        </div>
+        <div>
+          <div class="drug">Velmarix</div>
+          <div class="drug-sub">40mg · 2 pens/mo</div>
+        </div>
+        <div class="blocker"><b>Copay card expires Friday.</b> Re-enrollment not started.</div>
+        <div>
+          <div class="cost">$25</div>
+          <div class="cost-sub"><span class="pill p-copay">COPAY</span></div>
+        </div>
+        <div>
+          <div class="clock hot">4d left</div>
+          <div class="clock-sub">Rx 22 Jul</div>
+        </div>
+        <div><span class="go">Re-enroll</span></div>
+      </button>
+
+      <div class="detail">
+        <div class="detail-head">Pathway comparison · deductible $1,140 remaining · patient prefers lowest cost</div>
+        <div class="paths">
+          <div class="path best">
+            <div class="path-top">
+              <div class="path-name">Manufacturer copay</div>
+              <div class="path-cost">$25</div>
+            </div>
+            <div class="path-meta">2–3 days · re-enrollment form</div>
+            <ul>
+              <li class="y">Eligible — commercial plan confirmed</li>
+              <li class="y">Same card, annual renewal only</li>
+              <li class="n">Doesn't touch deductible</li>
+              <li class="i">Annual cap $13,000 · $4,200 used</li>
+            </ul>
+          </div>
+          <div class="path">
+            <div class="path-top">
+              <div class="path-name">PAN Foundation grant</div>
+              <div class="path-cost">$0</div>
+            </div>
+            <div class="path-meta">1–2 weeks · income verification</div>
+            <ul>
+              <li class="y">RA fund opened 2h ago</li>
+              <li class="y">Counts toward deductible</li>
+              <li class="n">Won't land before Friday</li>
+              <li class="i">Household income doc needed</li>
+            </ul>
+          </div>
+          <div class="path">
+            <div class="path-top">
+              <div class="path-name">Insurance only</div>
+              <div class="path-cost">$610</div>
+            </div>
+            <div class="path-meta">Same day · no paperwork</div>
+            <ul>
+              <li class="y">PA already approved thru Jan</li>
+              <li class="y">Applies to deductible</li>
+              <li class="n">Patient declined this in June</li>
+            </ul>
+          </div>
+        </div>
+        <div class="why">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              Re-enroll the copay card today to protect Friday's fill, <b>and</b> start the PAN
+              application in parallel — the RA fund just opened and closed twice this summer.
+              If the grant lands, switch at the next fill and recover the deductible credit.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Open re-enrollment</button>
+            <button class="btn-sm">Start PAN application</button>
+            <button class="btn-sm">Copy note to chart</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ROW 2 -->
+    <article class="row" data-flag="hot">
+      <button class="row-main" aria-expanded="false">
+        <div>
+          <div class="pt-name">R. Vance</div>
+          <div class="pt-sub">MRN 3388 · PsA</div>
+        </div>
+        <div>
+          <div class="drug">Obrelza</div>
+          <div class="drug-sub">150mg · monthly</div>
+        </div>
+        <div class="blocker"><b>PA denied 15 Aug</b> — step therapy not documented.</div>
+        <div>
+          <div class="cost">$780</div>
+          <div class="cost-sub"><span class="pill p-ins">APPEAL</span></div>
+        </div>
+        <div>
+          <div class="clock hot">Appeal in 11d</div>
+          <div class="clock-sub">Denied 15 Aug</div>
+        </div>
+        <div><span class="go">Draft appeal</span></div>
+      </button>
+      <div class="detail">
+        <div class="detail-head">Pathway comparison · appeal window closes 28 Aug</div>
+        <div class="paths">
+          <div class="path best">
+            <div class="path-top"><div class="path-name">Appeal with chart pull</div><div class="path-cost">$25</div></div>
+            <div class="path-meta">7–14 days · letter + records</div>
+            <ul>
+              <li class="y">Two prior DMARD trials are in the chart</li>
+              <li class="y">Restores copay card eligibility</li>
+              <li class="n">Patient waits on therapy</li>
+            </ul>
+          </div>
+          <div class="path">
+            <div class="path-top"><div class="path-name">Bridge program</div><div class="path-cost">$0</div></div>
+            <div class="path-meta">2 days · manufacturer form</div>
+            <ul>
+              <li class="y">Covers up to 90 days during appeal</li>
+              <li class="y">Patient starts this week</li>
+              <li class="i">Requires documented denial — have it</li>
+            </ul>
+          </div>
+          <div class="path">
+            <div class="path-top"><div class="path-name">HealthWell grant</div><div class="path-cost">—</div></div>
+            <div class="path-meta">Unavailable</div>
+            <ul>
+              <li class="n">PsA fund closed since 3 Aug</li>
+              <li class="i">Alert set — you'll be notified</li>
+            </ul>
+          </div>
+        </div>
+        <div class="why">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              Start the bridge program today so the patient isn't waiting, then file the appeal
+              with the DMARD history from the 4/12 and 11/03 notes. <b>Bridge covers 90 days</b> —
+              longer than the appeal typically takes.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Start bridge enrollment</button>
+            <button class="btn-sm">Draft appeal letter</button>
+            <button class="btn-sm">Copy note to chart</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ROW 3 -->
+    <article class="row" data-flag="warm">
+      <button class="row-main" aria-expanded="false">
+        <div>
+          <div class="pt-name">J. Whitfield</div>
+          <div class="pt-sub">MRN 5102 · AS</div>
+        </div>
+        <div>
+          <div class="drug">Tenvaris</div>
+          <div class="drug-sub">200mg · q8wk</div>
+        </div>
+        <div class="blocker">PA submitted 12 Aug — <b>no response from plan.</b></div>
+        <div>
+          <div class="cost">$25</div>
+          <div class="cost-sub"><span class="pill p-copay">COPAY</span></div>
+        </div>
+        <div>
+          <div class="clock warm">Day 5</div>
+          <div class="clock-sub">SLA 72h</div>
+        </div>
+        <div><span class="go ghost">Follow up</span></div>
+      </button>
+      <div class="detail">
+        <div class="detail-head">Plan is past its 72-hour turnaround commitment</div>
+        <div class="why" style="margin-top:0">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              Call the plan's provider line and cite the missed SLA — this plan has averaged
+              <b>6.2 days</b> on your last 14 submissions. Copay card is already active, so the
+              fill goes through at $25 the moment the PA clears.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Log follow-up call</button>
+            <button class="btn-sm">Copy note to chart</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ROW 4 -->
+    <article class="row" data-flag="warm">
+      <button class="row-main" aria-expanded="false">
+        <div>
+          <div class="pt-name">A. Restrepo</div>
+          <div class="pt-sub">MRN 2914 · Lupus</div>
+        </div>
+        <div>
+          <div class="drug">Kavistan</div>
+          <div class="drug-sub">300mg · monthly</div>
+        </div>
+        <div class="blocker"><b>Medicare Part D</b> — copay card not permitted.</div>
+        <div>
+          <div class="cost">$0</div>
+          <div class="cost-sub"><span class="pill p-pap">PAP</span></div>
+        </div>
+        <div>
+          <div class="clock warm">Day 3</div>
+          <div class="clock-sub">Rx 14 Aug</div>
+        </div>
+        <div><span class="go">Check PAP</span></div>
+      </button>
+      <div class="detail">
+        <div class="detail-head">Federal beneficiary — manufacturer copay assistance is excluded</div>
+        <div class="paths">
+          <div class="path best">
+            <div class="path-top"><div class="path-name">Manufacturer PAP</div><div class="path-cost">$0</div></div>
+            <div class="path-meta">1–2 weeks · income + Part D denial</div>
+            <ul>
+              <li class="y">Income at 240% FPL — under the 400% cap</li>
+              <li class="y">Permitted for Part D patients</li>
+              <li class="n">Needs proof of Part D cost share</li>
+            </ul>
+          </div>
+          <div class="path">
+            <div class="path-top"><div class="path-name">Good Days grant</div><div class="path-cost">—</div></div>
+            <div class="path-meta">Unavailable</div>
+            <ul>
+              <li class="n">Lupus fund closed since 28 Jul</li>
+              <li class="i">Alert set — you'll be notified</li>
+            </ul>
+          </div>
+          <div class="path">
+            <div class="path-top"><div class="path-name">Part D only</div><div class="path-cost">$412</div></div>
+            <div class="path-meta">Same day · no paperwork</div>
+            <ul>
+              <li class="y">Counts toward the $2,000 annual cap</li>
+              <li class="n">Above what patient said she can pay</li>
+            </ul>
+          </div>
+        </div>
+        <div class="why">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              Copay card is <b>blocked by federal rules</b>, not by eligibility — don't offer it.
+              PAP is the path. Pull her Part D cost-share statement from the portal and submit today;
+              approvals on this program have averaged 9 days.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Start PAP application</button>
+            <button class="btn-sm">Copy note to chart</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ROW 5 -->
+    <article class="row" data-flag="ok">
+      <button class="row-main" aria-expanded="false">
+        <div>
+          <div class="pt-name">S. Bergquist</div>
+          <div class="pt-sub">MRN 6620 · Crohn's</div>
+        </div>
+        <div>
+          <div class="drug">Rilzuvex</div>
+          <div class="drug-sub">90mg · q8wk</div>
+        </div>
+        <div class="blocker">PA approved. <b>Enrollment form unsigned.</b></div>
+        <div>
+          <div class="cost">$0</div>
+          <div class="cost-sub"><span class="pill p-fund">PAF GRANT</span></div>
+        </div>
+        <div>
+          <div class="clock">Day 2</div>
+          <div class="clock-sub">Rx 15 Aug</div>
+        </div>
+        <div><span class="go">Send to sign</span></div>
+      </button>
+      <div class="detail">
+        <div class="detail-head">Everything cleared — one signature outstanding</div>
+        <div class="why" style="margin-top:0">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              PAF Crohn's fund is open and he qualifies. Text the form for e-signature —
+              <b>fund has been open 13 days</b>, and the median open window for this fund is 21 days.
+              Worth closing this week.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Text form for signature</button>
+            <button class="btn-sm">Copy note to chart</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ROW 6 -->
+    <article class="row" data-flag="hot">
+      <button class="row-main" aria-expanded="false">
+        <div>
+          <div class="pt-name">L. Truong</div>
+          <div class="pt-sub">MRN 1907 · RA</div>
+        </div>
+        <div>
+          <div class="drug">Velmarix</div>
+          <div class="drug-sub">40mg · 2 pens/mo</div>
+        </div>
+        <div class="blocker"><b>Quoted $650 at pharmacy, walked out.</b> Never filled.</div>
+        <div>
+          <div class="cost">$25</div>
+          <div class="cost-sub"><span class="pill p-copay">COPAY</span></div>
+        </div>
+        <div>
+          <div class="clock hot">19d unfilled</div>
+          <div class="clock-sub">Rx 29 Jul</div>
+        </div>
+        <div><span class="go">Call patient</span></div>
+      </button>
+      <div class="detail">
+        <div class="detail-head">Abandoned at the counter — recoverable</div>
+        <div class="why" style="margin-top:0">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              She never learned the copay card existed. One call and an enrollment link takes her
+              from <b>$650 to $25</b>. This is the highest-value 10 minutes on today's board —
+              and the reason to flag sticker-shock abandonment as its own status.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Call and enroll</button>
+            <button class="btn-sm">Text enrollment link</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ROW 7 -->
+    <article class="row" data-flag="ok">
+      <button class="row-main" aria-expanded="false">
+        <div>
+          <div class="pt-name">M. Adeyemi</div>
+          <div class="pt-sub">MRN 7745 · PsA</div>
+        </div>
+        <div>
+          <div class="drug">Obrelza</div>
+          <div class="drug-sub">150mg · monthly</div>
+        </div>
+        <div class="blocker">New Rx. <b>Benefits not yet verified.</b></div>
+        <div>
+          <div class="cost">—</div>
+          <div class="cost-sub">pending BV</div>
+        </div>
+        <div>
+          <div class="clock">Day 1</div>
+          <div class="clock-sub">Rx 16 Aug</div>
+        </div>
+        <div><span class="go ghost">Run benefits</span></div>
+      </button>
+      <div class="detail">
+        <div class="detail-head">Nothing to decide until benefits come back</div>
+        <div class="why" style="margin-top:0">
+          <div class="why-body">
+            <div class="why-label">Recommended sequence</div>
+            <div class="why-text">
+              Run the benefit check first — plan and deductible status determine whether copay card
+              or grant is the better path. Board will re-rank automatically once results post.
+            </div>
+          </div>
+          <div class="why-actions">
+            <button class="btn-sm solid">Run benefit check</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="foot">
+    <span>7 open · 3 expiring this week · 2 awaiting plan response</span>
+    <span>Last sync 8:36a</span>
+  </div>
+</main>
+
+<script>
+document.querySelectorAll('.row-main').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var row = btn.closest('.row');
+    var open = row.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+});
+
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected','false'); });
+    tab.setAttribute('aria-selected','true');
+    var f = tab.dataset.filter;
+    document.querySelectorAll('.row').forEach(function(row){
+      row.classList.toggle('hidden', f !== 'all' && row.dataset.flag !== f);
+    });
+    var shown = document.querySelectorAll('.row:not(.hidden)').length;
+    document.querySelector('.count').innerHTML = shown + ' patients <em>' +
+      (f === 'all' ? 'need action today' : 'in this view') + '</em>';
+  });
+});
+
+document.querySelectorAll('[data-bell]').forEach(function(b){
+  b.addEventListener('click', function(e){
+    e.stopPropagation();
+    var on = b.classList.toggle('on');
+    b.textContent = on ? 'notify on' : 'notify me';
+  });
+});
+</script>
+</body>
+</html>
